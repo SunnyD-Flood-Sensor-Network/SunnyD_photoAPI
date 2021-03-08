@@ -13,7 +13,6 @@ library(googledrive)
 library(exifr)
 library(stringr)
 
-# source("C:/Users/Adam Gold/Desktop/microsoft_api_keys.R")
 # source("C:/Users/Adam Gold/Desktop/postgres_keys.R")
 
 # Connect to database
