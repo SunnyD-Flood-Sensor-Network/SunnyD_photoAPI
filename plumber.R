@@ -35,24 +35,47 @@ function(key, camera_ID, file, timezone = "EST") {
       mutate(high_water = F)
 
     if(!exif_tib$drive_filename %in% c(con %>% tbl("photo_info") %>% pull(drive_filename))){
-      suppressMessages(
-      drive_upload(media =  tmpfile,
+      suppressMessages(error_message <- try(
+      googledrive::drive_upload(media =  tmpfile,
                    path = as_id(Sys.getenv("GOOGLE_DRIVE_FOLDER_ID")),
-                   name =  exif_tib$drive_filename)
+                   name =  paste0(exif_tib$drive_filename,".jpg"))
+      )
       )
     }
 
-    dbx::dbxUpsert(conn = con,
-                   table = "photo_info",
-                   records = exif_tib,
-                   where_cols = c("drive_filename"),
-                   skip_existing = T
-    )
+    if(googledrive::is_dribble(error_message)) {
+      dbx::dbxUpsert(
+        conn = con,
+        table = "photo_info",
+        records = exif_tib,
+        where_cols = c("drive_filename"),
+        skip_existing = T
+      )
 
-    unlink(tmpfile)
-    unlink(file)
+      unlink(tmpfile)
+      rm(tmpfile)
+      unlink(file)
+      rm(file)
+      rm(exif_tib)
+      rm(error_message)
 
-    return("SUCCESS!")
+      return("SUCCESS!")
+    }
+
+    if(!googledrive::is_dribble(error_message)) {
+      unlink(tmpfile)
+      rm(tmpfile)
+      unlink(file)
+      rm(file)
+      rm(exif_tib)
+      rm(error_message)
+
+      return(paste0("ERROR! IMAGE NOT WRITTEN TO DRIVE!"))
+    }
+
+
+
+
 
   }
 
@@ -66,13 +89,11 @@ function(key, camera_ID) {
 
   if (key %in% api_keys & camera_ID %in% camera_id_list) {
 
-    latest_picture <- con %>%
-      tbl("photo_info") %>%
-      filter(camera_ID == camera_ID) %>%
-      filter(DateTimeOriginalUTC == max(DateTimeOriginalUTC, na.rm=T)) %>%
-      collect()
-
-      return(latest_picture)
+      return(con %>%
+               tbl("photo_info") %>%
+               filter(camera_ID == camera_ID) %>%
+               filter(DateTimeOriginalUTC == max(DateTimeOriginalUTC, na.rm=T)) %>%
+               collect())
     }
 }
 
