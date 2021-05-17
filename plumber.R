@@ -34,6 +34,8 @@ function(key, camera_ID, file, timezone = "EST") {
       mutate(camera_ID = camera_ID, .before = SourceFile) %>%
       mutate(high_water = F)
 
+    error_message <- NA
+
     if(!exif_tib$drive_filename %in% c(con %>% tbl("photo_info") %>% pull(drive_filename))){
       suppressMessages(error_message <- try(
       googledrive::drive_upload(media =  tmpfile,
