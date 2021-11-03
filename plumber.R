@@ -44,10 +44,9 @@ function(key, camera_ID, file, timezone = "EST") {
     date_string <- exif_tib %>% pull(DateTimeOriginalUTC) %>% lubridate::as_date() %>% as.character()
 
     # Get folder ID of the individual camera's folder
-    camera_folder_id <- googledrive::drive_find(pattern = camera_ID,
-                                         type = "folder",
+    camera_folder_id <- googledrive::drive_get(path = paste0("Images/",camera_ID,"/"),
                                          shared_drive = as_id(Sys.getenv("GOOGLE_DRIVE_FOLDER_ID")),
-                                         n_max = 1)
+                                         )
 
     # Query the camera_folder to see if there is a folder matching the current date
     date_folder_id <- googledrive::drive_ls(pattern = date_string,
