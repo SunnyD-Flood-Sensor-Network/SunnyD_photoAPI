@@ -131,3 +131,67 @@ function(key, camera_ID) {
     }
 }
 
+
+#* @post /create_camera
+#* @param key API key
+#* @param place ex: Beaufort, North Carolina
+#* @param camera_id ex: CAM_BF_01
+#* @param lng
+#* @param lat
+#* Create a new sensor location
+function(key, place, camera_id, lng, lat){
+  if(!key %in% api_keys){
+    stop("WRONG KEY!")
+  }
+  if (key %in% api_keys) {
+    cam_info <- tibble::tibble(
+      "place" = place,
+      "camera_ID" = camera_id,
+      "lng" = as.numeric(lng),
+      "lat" = as.numeric(lat)
+    )
+
+    dbx::dbxUpsert(conn = con,
+                   table = "camera_locations",
+                   records = cam_info,
+                   where_cols = c("place","camera_ID"),
+                   skip_existing = T)
+
+    rm(site_info)
+
+    return(paste("SUCCESS!", "Created new camera: ",camera_id))
+
+  }
+}
+
+#* @post /edit_camera
+#* @param key API key
+#* @param place ex: Beaufort, North Carolina
+#* @param camera_id ex: CAM_BF_01
+#* @param lng
+#* @param lat
+#* Edit a sensor location. Fill in only the attributes you wish to change
+function(key, place, camera_id, lng = NA, lat = NA){
+  if(!key %in% api_keys){
+    stop("WRONG KEY!")
+  }
+  if (key %in% api_keys) {
+    new_info <- tibble::tibble(
+      "place" = place,
+      "camera_ID" = camera_id,
+      "lng" = as.numeric(lng),
+      "lat" = as.numeric(lat),
+    )
+    changed_cols <-  colnames(new_info)[!colnames(new_info) %in% c("place","camera_ID")]
+
+    dbx::dbxUpsert(conn = con,
+                   table = "camera_locations",
+                   records = new_info,
+                   where_cols = c("place","camera_ID"),
+                   skip_existing = F)
+    rm(new_info)
+
+    return(paste("SUCCESS!", "Edited",camera_id,"column(s):", changed_cols))
+
+  }
+}

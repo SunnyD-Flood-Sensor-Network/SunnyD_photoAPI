@@ -18,7 +18,7 @@ RUN apt-get update && \
     apt-get clean
 
 # install renv & restore packages
-RUN install2.r lubridate dplyr DBI RPostgres dbx pool plumber dbplyr magick raster httr jsonlite googledrive exifr stringr
+RUN install2.r lubridate dplyr DBI RPostgres dbx pool plumber dbplyr magick httr jsonlite googledrive exifr stringr
 
 RUN groupadd -r plumber && useradd --no-log-init -r -g plumber plumber
 
