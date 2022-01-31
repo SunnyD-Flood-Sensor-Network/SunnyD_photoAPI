@@ -125,7 +125,7 @@ function(key, camera_ID) {
 
       return(con %>%
                tbl("photo_info") %>%
-               filter(camera_ID == camera_ID) %>%
+               filter(camera_ID == !!camera_ID) %>%
                filter(DateTimeOriginalUTC == max(DateTimeOriginalUTC, na.rm=T)) %>%
                collect())
     }
