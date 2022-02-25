@@ -19,15 +19,11 @@ list()
 function(key, camera_ID, file, timezone = "EST") {
   if (key %in% api_keys & camera_ID %in% camera_id_list) {
 
-    # Write the uploaded file to a temporary file
-    tmpfile <- tempfile(fileext = ".jpg")
-    magick::image_write(file[[1]], tmpfile)
-
     # Write a reduced resolution copy to the public facing storage
     magick::image_write(file[[1]] %>% magick::image_scale(geometry ="1000") , paste0("/data/",camera_ID,".jpg"))
 
     # Read the EXIF data from the picture to see when it was taken and to convert time zones
-    exif_tib <- exifr::read_exif(tmpfile,
+    exif_tib <- exifr::read_exif(file[[1]],
                                  tags = c("FileName","FileSize","DateTimeOriginal"))
 
     exif_tib <- exif_tib %>%
@@ -63,7 +59,7 @@ function(key, camera_ID, file, timezone = "EST") {
     # If the current photo name is not in the database, upload it to the cloud!
     if(!exif_tib$drive_filename %in% c(con %>% tbl("photo_info") %>% pull(drive_filename))){
       suppressMessages(error_message <- try(
-      googledrive::drive_upload(media = tmpfile,
+      googledrive::drive_upload(media = file[[1]],
                    path = as_id(date_folder_id),
                    name =  paste0(exif_tib$drive_filename,".jpg"))
       )
@@ -80,8 +76,6 @@ function(key, camera_ID, file, timezone = "EST") {
         skip_existing = T
       )
 
-      unlink(tmpfile)
-      rm(tmpfile)
       unlink(file)
       rm(file)
       rm(exif_tib)
@@ -94,8 +88,6 @@ function(key, camera_ID, file, timezone = "EST") {
     }
 
     if(!googledrive::is_dribble(error_message)) {
-      unlink(tmpfile)
-      rm(tmpfile)
       unlink(file)
       rm(file)
       rm(exif_tib)
